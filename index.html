@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت‌بات هوش مصنوعی</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            text-align: right;
+            direction: rtl;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        input {
+            width: 75%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 10px;
+            border: none;
+            background: blue;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-box" id="chatBox"></div>
+    <input type="text" id="userInput" placeholder="پیام خود را بنویسید...">
+    <button onclick="sendMessage()">ارسال</button>
+</div>
+
+<script>
+    async function sendMessage() {
+        const inputBox = document.getElementById("userInput");
+        const chatBox = document.getElementById("chatBox");
+        const userMessage = inputBox.value.trim();
+
+        if (userMessage === "") return;
+
+        displayMessage("شما", userMessage);
+
+        try {
+            let response = await fetch("http://localhost:5000/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: userMessage })
+            });
+
+            let data = await response.json();
+            displayMessage("ربات", data.answer);
+        } catch (error) {
+            displayMessage("ربات", "خطا در دریافت پاسخ!");
+        }
+
+        inputBox.value = "";
+    }
+
+    function displayMessage(sender, message) {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
