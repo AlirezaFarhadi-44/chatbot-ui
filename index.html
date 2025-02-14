@@ -64,7 +64,7 @@
         displayMessage("شما", userMessage);
 
         try {
-            let response = await fetch("https://simple-chatbot-3ewm.onrender.com:10000/api/chat", {
+            let response = await fetch("https://simple-chatbot-3ewm.onrender.com:7878/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query: userMessage })
