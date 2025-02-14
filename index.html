@@ -3,88 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت‌بات هوش مصنوعی</title>
-    <style>
-        body {
-            font-family: Tahoma, Arial, sans-serif;
-            text-align: right;
-            direction: rtl;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .chat-container {
-            width: 350px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .chat-box {
-            height: 300px;
-            overflow-y: auto;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 10px;
-            padding: 10px;
-        }
-        input {
-            width: 75%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            padding: 8px 10px;
-            border: none;
-            background: blue;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+    <title>چت‌بات پشتیبانی دانشگاه شهید رجایی</title>
+
+    <link href=" http://cdn.font-store.ir/yekan.css" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div class="chat-container">
-    <div class="chat-box" id="chatBox"></div>
-    <input type="text" id="userInput" placeholder="پیام خود را بنویسید...">
-    <button onclick="sendMessage()">ارسال</button>
-</div>
+    <div class="header">
+        <img src="images/srttu-logo.png" alt="لوگوی دانشگاه شهید رجایی">
+        <h2>چت‌بات پشتیبانی دانشگاه شهید رجایی</h2>
+    </div>
 
-<script>
-    async function sendMessage() {
-        const inputBox = document.getElementById("userInput");
-        const chatBox = document.getElementById("chatBox");
-        const userMessage = inputBox.value.trim();
+    <div class="chat-container">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="پیام خود را بنویسید...">
+            <button onclick="sendMessage()">&#9650;</button>
+        </div>
+        <button class="clear-history" onclick="clearChatHistory()">پاک‌کردن تاریخچه</button>
+    </div>
 
-        if (userMessage === "") return;
-
-        displayMessage("شما", userMessage);
-
-        try {
-            let response = await fetch("https://simple-chatbot-3ewm.onrender.com/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: userMessage })
+    <script>
+        window.onload = function() {
+            const savedMessages = JSON.parse(localStorage.getItem("chatMessages")) || [];
+            savedMessages.forEach(msg => {
+                displayMessage(msg.sender, msg.message);
             });
-
-            let data = await response.json();
-            displayMessage("ربات", data.answer);
-        } catch (error) {
-            displayMessage("ربات", "خطا در دریافت پاسخ!");
         }
 
-        inputBox.value = "";
-    }
+        async function sendMessage() {
+            const inputBox = document.getElementById("userInput");
+            const userMessage = inputBox.value.trim();
 
-    function displayMessage(sender, message) {
-        const chatBox = document.getElementById("chatBox");
-        chatBox.innerHTML += `<p><strong>${sender}:</strong> ${message}</p>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-</script>
+            if (userMessage === "") return;
+
+            displayMessage("شما", userMessage);
+            saveToLocalStorage("شما", userMessage);
+
+            try {
+                let response = await fetch("http://localhost:7878/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: userMessage })
+                });
+
+                let data = await response.json();
+                displayMessage("ربات", data.answer);
+                saveToLocalStorage("ربات", data.answer);
+            } catch (error) {
+                displayMessage("ربات", "خطا در دریافت پاسخ!");
+                saveToLocalStorage("ربات", "خطا در دریافت پاسخ!");
+            }
+
+            inputBox.value = "";
+        }
+
+        function displayMessage(sender, message) {
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML += `<p class="message ${sender === 'شما' ? 'user-message' : 'bot-message'}">
+                <strong>${sender}:</strong> ${message}
+            </p>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function saveToLocalStorage(sender, message) {
+            const savedMessages = JSON.parse(localStorage.getItem("chatMessages")) || [];
+            savedMessages.push({ sender, message });
+            localStorage.setItem("chatMessages", JSON.stringify(savedMessages));
+        }
+
+        function clearChatHistory() {
+            localStorage.removeItem("chatMessages");
+            document.getElementById("chatBox").innerHTML = "";
+        }
+
+        document.getElementById("userInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
 
 </body>
 </html>
