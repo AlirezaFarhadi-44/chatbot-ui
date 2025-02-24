@@ -7,7 +7,7 @@
 
     <link href=" http://cdn.font-store.ir/yekan.css" rel="stylesheet" type="text/css" />
 
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -39,27 +39,45 @@
 
             if (userMessage === "") return;
 
+            // Get conversation history from localStorage or initialize it
+            let history = JSON.parse(localStorage.getItem("chatMessages")) || [];
+
+            // Add user message to history
+            // history.push({ sender: "شما", message: userMessage });
+
+            // Display user message on the screen
             displayMessage("شما", userMessage);
             saveToLocalStorage("شما", userMessage);
 
             try {
+                // Send the message along with history to the backend
                 let response = await fetch("https://simple-chatbot-3ewm.onrender.com/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: userMessage })
+                    body: JSON.stringify({ query: userMessage, history: history })  // Send history here
                 });
 
+                // Process the response
                 let data = await response.json();
-                displayMessage("ربات", data.answer);
-                saveToLocalStorage("ربات", data.answer);
+                const botResponse = data.answer;
+
+                // Display bot's response on the screen
+                displayMessage("ربات", botResponse);
+                saveToLocalStorage("ربات", botResponse);
+
+                // Add bot response to history
+                history.push({ sender: "ربات", message: botResponse });
+
             } catch (error) {
                 displayMessage("ربات", "خطا در دریافت پاسخ!");
                 saveToLocalStorage("ربات", "خطا در دریافت پاسخ!");
             }
 
+            // Clear the input box
             inputBox.value = "";
         }
 
+        
         function displayMessage(sender, message) {
             const chatBox = document.getElementById("chatBox");
             chatBox.innerHTML += `<p class="message ${sender === 'شما' ? 'user-message' : 'bot-message'}">
@@ -78,7 +96,6 @@
             localStorage.removeItem("chatMessages");
             document.getElementById("chatBox").innerHTML = "";
         }
-
         document.getElementById("userInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
